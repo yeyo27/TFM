@@ -1,0 +1,29 @@
+body {
+    font-family: sans-serif, arial;
+}
+
+main {
+    height: 100%;
+}
+
+#url-form {
+    padding: 20px 0;
+}
+
+#url-input {
+    font-size: 20px;
+    height: 30px;
+    width: 300px;
+    padding: 0;
+    border: 1px solid;
+    border-radius: 2px;
+}
+
+#url-submit {
+    height: 31.6px;
+    width: 78px;
+    font-size: 20px;
+    border-radius: 2px;
+    padding: 0;
+    margin: 0;
+}
