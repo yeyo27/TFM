@@ -1,8 +1,12 @@
-from fastapi import FastAPI, Request
+from typing import Annotated
+
+from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl
+
+from app.scraper import get_text_from_url
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -14,14 +18,9 @@ async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-class URL(BaseModel):
-    url: HttpUrl
-
-
 @app.post("/")
-async def process_url(payload: URL):
-    # TODO
-    pass
+async def process_url(url: Annotated[HttpUrl, Form()]):
+    return {"url": url, "text": get_text_from_url(str(url))}
 
 
 class HealthCheckResponse(BaseModel):

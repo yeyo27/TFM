@@ -1,6 +1,4 @@
-# TFM
-Unveiling a Dynamic Virtual Assistant Powered by Vector Search.
-
+# Unveiling a Dynamic Virtual Assistant Powered by Vector Search.
 TFM of master in Big Data and Artificial Intelligence
 
 Steps to follow (initial prototype):
