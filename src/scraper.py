@@ -1,32 +1,29 @@
-from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import logging
-import re
 
 
-class UrlCleaner:
-    def __init__(self, url):
-        self.stop_html_elements = ["script", "style", "nav", "footer",
-                                   "img", "button", "h1", "h2", "header",
-                                   "web-header", "meta", "link", "web-snackbar-container"]
+class HtmlCleaner:
+    def __init__(self, html_body):
+        self.stop_html_elements = ["head", "script", "style",
+                                   "footer", "img", "button",
+                                   "h1", "h2", "h3",
+                                   "header", "web-header", "meta",
+                                   "link", "nav"]
 
-        logging.debug("Reading HTML from URL")
-        self.url = url
-        html = urlopen(url).read()
-        self.soup = BeautifulSoup(html, features="html.parser")
+        logging.debug("Parsing HTML")
+        self.soup = BeautifulSoup(html_body, features="html.parser")
 
-    def remove_elements_from_html(self) -> None:
+    def remove_elements_from_html(self) -> BeautifulSoup:
         """
         :return:
         """
         logging.debug("Removing undesired elements from HTML")
-        for stop_html_element in self.stop_html_elements:
-            for element in self.soup(stop_html_element):
-                try:
-                    element.clear()
-                    element.decompose()
-                except AttributeError:
-                    logging.error(f"{element} not found")
+        for element in self.soup.findAll(self.stop_html_elements):
+            try:
+                element.decompose()
+            except AttributeError:
+                logging.error(f"{element} not found")
+        return self.soup
 
     def get_text_from_url(self) -> str:
         """
@@ -35,10 +32,14 @@ class UrlCleaner:
         # kill all script and style elements
         self.remove_elements_from_html()
         # get text
-        logging.debug("Getting text from HTML")
-        text = '\n'.join(self.soup.stripped_strings)
+        logging.debug("Extracting HTML elements with text")
+        text_elements = self.soup.findAll(["p", "ol"])
+        logging.debug("Extracting text from elements")
+        whole_text = ""
+        for text_element in text_elements:
+            whole_text += text_element.text + "\n"
         logging.debug("Finished")
-        return text
+        return whole_text
 
     def write_file(self, path: str, mode: str = "w") -> None:
         logging.debug("Writing file")
@@ -47,20 +48,11 @@ class UrlCleaner:
         logging.debug("Completed")
 
 
-def camel_case_split(s: str) -> str:
-    result = ""
-    start = 0
-    for i, c in enumerate(s[1:], 1):
-        if c.isupper():
-            result = result + s[start:i] + " "
-            start = i
-    result += s[start:]
-    return result
-
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     url = "https://es.wikipedia.org/wiki/Delphinidae"
     url1 = "https://web.dev/howbrowserswork/"
-    cleaner = UrlCleaner(url1)
-    cleaner.write_file("example.txt")
+    with open("../test/readable_web.html", "r") as f:
+        html = f.read()
+        cleaner = HtmlCleaner(html)
+        cleaner.write_file("../test/example_from_readability.txt")
