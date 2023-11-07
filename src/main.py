@@ -1,26 +1,29 @@
 from typing import Annotated
 
 from fastapi import FastAPI, Request, Form
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl
 
-from app.scraper import get_text_from_url
+import src.scraper
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates/")
 
 
-@app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+@app.get("/")
+async def root():
+    return "<h1>Hello World</h1>"
 
 
-@app.post("/")
-async def process_url(url: Annotated[HttpUrl, Form()]):
-    return {"url": url, "text": get_text_from_url(str(url))}
+@app.post("/api/v1/url")
+async def process_url(url: HttpUrl):
+    """
+
+    :param url:
+    :return:
+    """
+    return {"url": url, "text": "toDo"}
 
 
 class HealthCheckResponse(BaseModel):
