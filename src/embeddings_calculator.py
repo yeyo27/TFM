@@ -1,6 +1,3 @@
-from typing import Tuple, List, Any
-
-import numpy
 from sentence_transformers import SentenceTransformer
 from time import time
 import logging
@@ -10,13 +7,16 @@ class EmbeddingsCalculator:
     def __init__(self, model_name="average_word_embeddings_komninos"):
         self.model = SentenceTransformer(model_name)
 
-    def calculate(self, text: str) -> tuple[list[str], list]:
+    def calculate(self, sentence: str | list[str]) -> list:
+        return self.model.encode(sentence).tolist()
+
+    def calculate_text_embeddings(self, text: str) -> tuple[list[str], list]:
         lines = text.splitlines()
         logging.debug(f"Number of lines {len(lines)}")
-        return lines, self.model.encode(lines).tolist()
+        return lines, self.calculate(lines)
 
-    def get_lines_embeddings_pairs(self, text: str) -> list:
-        lines, embeddings = self.calculate(text)
+    def get_lines_embeddings_pairs(self, text: str) -> list[tuple]:
+        lines, embeddings = self.calculate_text_embeddings(text)
         return list(zip(lines, embeddings))
 
 
@@ -32,4 +32,3 @@ if __name__ == "__main__":
         embeddings = emb_calc.get_lines_embeddings_pairs(text)
         logging.debug(f"Calculation finished. Elapsed time: {time() - start} seconds")
         print(embeddings[0])
-
