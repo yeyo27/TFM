@@ -16,11 +16,11 @@ const fs = require('fs');
     let reader = new Readability(doc.window.document);
     let article = reader.parse();
 
-    const htmlText = article.content;
+    const cleanHtml = article.content;
 
     console.log(article)
 
-    fs.writeFile('output.html', htmlText, (err) => {
+    fs.writeFile('output.html', cleanHtml, (err) => {
 
         // In case of an error throw err.
         if (err) throw err;

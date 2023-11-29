@@ -35,6 +35,12 @@ class VectorDB:
 
 
 if __name__ == "__main__":
+    """
+    model with decent results using our example webpage:
+    - paraphrase-multilingual-MiniLM-L12-v2 (size=384, measure > 0.7)
+    - average_word_embeddings_komninos (size=300, measure > 0.7)
+    - distiluse-base-multilingual-cased-v1 (size=512, measure ~= 0.596)
+    """
     logging.basicConfig(level=logging.DEBUG)
 
     logging.debug("Starting vector database...")
@@ -42,7 +48,7 @@ if __name__ == "__main__":
     logging.debug("Database initiated")
 
     logging.debug("Creating embeddings calculator...")
-    emb_calc = EmbeddingsCalculator()
+    emb_calc = EmbeddingsCalculator("average_word_embeddings_komninos")
     logging.debug("Calculator created")
 
     with open("../test/example_from_readability.txt") as f:

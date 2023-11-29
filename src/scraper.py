@@ -3,7 +3,7 @@ import logging
 
 
 class HtmlCleaner:
-    def __init__(self, html_body):
+    def __init__(self, html_body: str):
         self.stop_html_elements = ["head", "script", "style",
                                    "footer", "img", "button",
                                    "h1", "h2", "h3",
@@ -25,7 +25,7 @@ class HtmlCleaner:
                 logging.error(f"{element} not found")
         return self.soup
 
-    def get_text_from_url(self) -> str:
+    def get_text_from_html(self) -> str:
         """
         :return:
         """
@@ -44,7 +44,7 @@ class HtmlCleaner:
     def write_file(self, path: str, mode: str = "w") -> None:
         logging.debug("Writing file")
         with open(path, mode) as file:
-            file.write(self.get_text_from_url())
+            file.write(self.get_text_from_html())
         logging.debug("Completed")
 
 
@@ -53,6 +53,6 @@ if __name__ == "__main__":
     url = "https://es.wikipedia.org/wiki/Delphinidae"
     url1 = "https://web.dev/howbrowserswork/"
     with open("../test/readable_web.html", "r") as f:
-        html = f.read()
-        cleaner = HtmlCleaner(html)
+        html_text = f.read()
+        cleaner = HtmlCleaner(html_text)
         cleaner.write_file("../test/example_from_readability.txt")
