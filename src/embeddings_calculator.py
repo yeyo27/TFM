@@ -8,6 +8,11 @@ class EmbeddingsCalculator:
         self.model = SentenceTransformer(model_name)
 
     def calculate(self, sentence: str | list[str]) -> list:
+        """
+        Calculate embeddings using the model
+        :param sentence: the sentence to embed
+        :return:
+        """
         return self.model.encode(sentence).tolist()
 
     def calculate_text_embeddings(self, text: str) -> tuple[list[str], list]:
@@ -16,6 +21,11 @@ class EmbeddingsCalculator:
         return lines, self.calculate(lines)
 
     def get_lines_embeddings_pairs(self, text: str) -> list[tuple]:
+        """
+        Get the lines along with their embeddings in pairs
+        :param text:
+        :return:
+        """
         lines, embeddings = self.calculate_text_embeddings(text)
         return list(zip(lines, embeddings))
 
