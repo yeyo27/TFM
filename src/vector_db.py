@@ -8,13 +8,25 @@ class VectorDB:
     def __init__(self):
         self.client = QdrantClient(":memory:")
 
-    def create_or_replace_collection(self, name: str, size: int = 300):
+    def create_or_replace_collection(self, name: str, size: int = 300) -> None:
+        """
+        Create or replace a collection in the QDrant client
+        :param name: name of the collection
+        :param size: size of the vectors. Depends on the model.
+        :return:
+        """
         self.client.recreate_collection(
             collection_name=name,
             vectors_config=VectorParams(size=size, distance=Distance.COSINE),
         )
 
     def insert_into(self, name: str, lines_vectors: list[tuple]):
+        """
+        Insert into a collection
+        :param name: name of a collection
+        :param lines_vectors: pairs of lines and their embeddings
+        :return:
+        """
         self.client.upsert(
             collection_name=name,
             points=[
@@ -28,6 +40,13 @@ class VectorDB:
         )
 
     def search_collection(self, name: str, query_vector: list, limit: int = 5):
+        """
+        Search in a collection
+        :param name: name of a collection
+        :param query_vector: embedding of the desired query
+        :param limit: number of returned hits
+        :return hits: coincidences with the highest similarity
+        """
         hits = self.client.search(collection_name=name,
                                   query_vector=query_vector,
                                   limit=limit)

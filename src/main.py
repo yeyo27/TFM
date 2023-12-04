@@ -11,6 +11,7 @@ from urllib.parse import unquote
 class ReadableHTML(BaseModel):
     url: HttpUrl
     encoded_html: str
+    probably_readable: bool
 
 
 class HealthCheckResponse(BaseModel):
@@ -39,7 +40,7 @@ async def root():
 async def submit_article(readable_html: ReadableHTML):
     """
     :param readable_html:
-    :return:
+    :return dict: contains the url and the number of vectors
     """
     decoded_html = unquote(readable_html.encoded_html)
     cleaner = HtmlCleaner(decoded_html)

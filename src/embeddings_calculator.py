@@ -16,6 +16,12 @@ class EmbeddingsCalculator:
         return self.model.encode(sentence).tolist()
 
     def calculate_text_embeddings(self, text: str) -> tuple[list[str], list]:
+        """
+        Separates text into lines and calculates embeddings.
+        :param text:
+        :return lines: list of lines contained in the text
+        :return embeddings: list of embeddings for each line
+        """
         lines = text.splitlines()
         logging.debug(f"Number of lines {len(lines)}")
         return lines, self.calculate(lines)
@@ -23,8 +29,8 @@ class EmbeddingsCalculator:
     def get_lines_embeddings_pairs(self, text: str) -> list[tuple]:
         """
         Get the lines along with their embeddings in pairs
-        :param text:
-        :return:
+        :param text: text to clean
+        :return list[tuple]: pairs of lines and their embeddings
         """
         lines, embeddings = self.calculate_text_embeddings(text)
         return list(zip(lines, embeddings))

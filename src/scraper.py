@@ -15,7 +15,8 @@ class HtmlCleaner:
 
     def remove_elements_from_html(self) -> BeautifulSoup:
         """
-        :return:
+        Remove undesired elements from HTML
+        :return A beautiful soup object:
         """
         logging.debug("Removing undesired elements from HTML")
         for element in self.soup.findAll(self.stop_html_elements):
@@ -27,13 +28,14 @@ class HtmlCleaner:
 
     def get_text_from_html(self) -> str:
         """
-        :return:
+        Get text from HTML, selecting paragraphs and lists
+        :return clean text: elements joined by carriage return
         """
         # kill all script and style elements
         self.remove_elements_from_html()
         # get text
         logging.debug("Extracting HTML elements with text")
-        text_elements = self.soup.findAll(["p", "ol"])
+        text_elements = self.soup.findAll(["p", "ol", "ul"])
         logging.debug("Extracting text from elements")
         whole_text = ""
         for text_element in text_elements:
@@ -42,6 +44,12 @@ class HtmlCleaner:
         return whole_text
 
     def write_file(self, path: str, mode: str = "w") -> None:
+        """
+        Write html text to file
+        :param path:
+        :param mode:
+        :return:
+        """
         logging.debug("Writing file")
         with open(path, mode) as file:
             file.write(self.get_text_from_html())

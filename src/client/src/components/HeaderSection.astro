@@ -1,0 +1,23 @@
+---
+import MenuIcon from '../icons/MenuIcon.astro';
+import HistoryIcon from '../icons/HistoryIcon.astro';
+import SignInIcon from '../icons/SignInIcon.astro';
+import HeaderSectionItem from './HeaderSectionItem.astro';
+---
+<nav class="w-[100%] h-[50%] flex flex-col gap-2">
+    <div class="p-2">
+        <ul class="ms-9 flex flex-row justify-end w-[100%] -space-x-2">
+            <HeaderSectionItem href="/">
+                <HistoryIcon /> History
+            </HeaderSectionItem>
+
+            <HeaderSectionItem href="/">
+                <MenuIcon /> Menu
+            </HeaderSectionItem>
+
+            <HeaderSectionItem href="/">
+                <SignInIcon /> Sign In
+            </HeaderSectionItem>
+        </ul>
+    </div>
+</nav>
