@@ -178,3 +178,12 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build

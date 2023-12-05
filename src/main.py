@@ -1,6 +1,4 @@
-from fastapi import FastAPI, Request, Form, HTTPException, Header, Depends
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 from pydantic import BaseModel, HttpUrl
 from src.scraper import HtmlCleaner
 from src.embeddings_calculator import EmbeddingsCalculator
@@ -54,9 +52,9 @@ async def submit_article(readable_html: ReadableHTML):
     return {"url": readable_html.url, "number_of_vectors": len(embeddings)}
 
 
-@app.get("/api/v1/url", response_class=HTMLResponse)
-async def query_article():
-    return ""
+@app.get("/api/v1/query/{id}")
+async def query_collection(collection_id: str):
+    return {"id": collection_id}
 
 
 @app.get("/api/v1/healthz", response_model=HealthCheckResponse)
