@@ -1,18 +1,25 @@
-import HeaderElement from './HeaderElement';
+import HeaderElementRight from './HeaderElementRight';
+import HeaderElementLeft from './HeaderElemenLeft';
 import HistoryIcon from '../icons/HistoryIcon.svg';
 import MenuIcon from '../icons/MenuIcon.svg';
 import SignInIcon from '../icons/SignInIcon.svg';
 
 function Header() {
     return (
-    <nav className="w-[100%] h-[50%] flex flex-col gap-2">
-        <div className="p-2">
-            <ul className="flex flex-row justify-end w-[100%] -space-x-2">
-                <HeaderElement href="/" icon={HistoryIcon} text="History"/>
+    <nav className="w-[100%] h-[100%] flex flex-row gap-2 justify-between">
+        <div className="p-2 w-[50%] h-[100%]">
+            <ul className="flex flex-row justify-start h-[100%] w-[100%]">
+                <HeaderElementLeft href="/" text="From URL"/>
+                <HeaderElementLeft href="/" text="From File"/>
+            </ul>
+        </div>
+        <div className="p-2 h-[100%]">
+            <ul className="flex flex-row justify-end h-[100%] w-[100%] -space-x-2">
+                <HeaderElementRight href="/" icon={HistoryIcon} text="History"/>
 
-                <HeaderElement href="/" icon={MenuIcon} text="Menu"/>
+                <HeaderElementRight href="/" icon={MenuIcon} text="Menu"/>
 
-                <HeaderElement href="/" icon={SignInIcon} text="Sign In"/>
+                <HeaderElementRight href="/" icon={SignInIcon} text="Sign In"/>
             </ul>
         </div>
     </nav>
