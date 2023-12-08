@@ -47,8 +47,8 @@ async def submit_article(readable_html: ReadableHTML):
     embeddings = calculator.get_lines_embeddings_pairs(clean_text)
 
     collection_id = str(hash(readable_html.url))
-    database.create_or_replace_collection(collection_id)
-    database.insert_into(collection_id, embeddings)
+    await database.create_or_replace_collection(collection_id)
+    await database.insert_into(collection_id, embeddings)
 
     return {"url": readable_html.url,
             "collection_id": collection_id,
@@ -61,7 +61,7 @@ async def query_collection(collection_id: str, query: str):
     decoded_id = unquote(collection_id)
     decoded_query = unquote(query)
     query_embeddings = calculator.calculate(decoded_query)
-    hits = database.search_collection(decoded_id, query_embeddings)
+    hits = await database.search_collection(decoded_id, query_embeddings)
     return {"id": decoded_id, "query": decoded_query, "hits": hits}
 
 
