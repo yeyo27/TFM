@@ -35,7 +35,7 @@ class HtmlCleaner:
         self.remove_elements_from_html()
         # get text
         logging.debug("Extracting HTML elements with text")
-        text_elements = self.soup.findAll(["p", "ol", "ul"])
+        text_elements = self.soup.findAll(["p", "ol", "ul", "blockquote"])
         logging.debug("Extracting text from elements")
         whole_text = ""
         for text_element in text_elements:
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     url = "https://es.wikipedia.org/wiki/Delphinidae"
     url1 = "https://web.dev/howbrowserswork/"
-    with open("../test/readable_web.html", "r") as f:
+    with open("../test/html_from_api.html", "r") as f:
         html_text = f.read()
         cleaner = HtmlCleaner(html_text)
-        cleaner.write_file("../test/example_from_readability.txt")
+        cleaner.write_file("../test/clean_text_from_api.txt")

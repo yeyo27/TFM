@@ -1,5 +1,5 @@
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, ScoredPoint
 import logging
 from embeddings_calculator import EmbeddingsCalculator
 
@@ -35,7 +35,7 @@ class VectorDB:
                     vector=pair[1],
                     payload={"answer": pair[0]}
                 )
-                for idx, pair in enumerate(lines_vectors)
+                for idx, pair in enumerate(lines_vectors) if all(element != 0.0 for element in pair[1])
             ]
         )
 
@@ -47,10 +47,9 @@ class VectorDB:
         :param limit: number of returned hits
         :return hits: coincidences with the highest similarity
         """
-        hits = self.client.search(collection_name=name,
+        return self.client.search(collection_name=name,
                                   query_vector=query_vector,
                                   limit=limit)
-        return hits
 
 
 if __name__ == "__main__":
@@ -70,7 +69,7 @@ if __name__ == "__main__":
     emb_calc = EmbeddingsCalculator("average_word_embeddings_komninos")
     logging.debug("Calculator created")
 
-    with open("../test/example_from_readability.txt") as f:
+    with open("../test/clean_text_from_api.txt") as f:
         logging.debug("Reading file...")
         context = f.read()
 

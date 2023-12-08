@@ -50,7 +50,10 @@ async def submit_article(readable_html: ReadableHTML):
     database.create_or_replace_collection(collection_id)
     database.insert_into(collection_id, embeddings)
 
-    return {"url": readable_html.url, "collection_id": collection_id, "number_of_vectors": len(embeddings)}
+    return {"url": readable_html.url,
+            "collection_id": collection_id,
+            "number_of_vectors": len(embeddings),
+            "probably_readable": readable_html.probably_readable}
 
 
 @app.get("/api/v1/url")
@@ -59,7 +62,7 @@ async def query_collection(collection_id: str, query: str):
     decoded_query = unquote(query)
     query_embeddings = calculator.calculate(decoded_query)
     hits = database.search_collection(decoded_id, query_embeddings)
-    return {"id": decoded_id, "query": query, "hits": hits}
+    return {"id": decoded_id, "query": decoded_query, "hits": hits}
 
 
 @app.get("/api/v1/healthz", response_model=HealthCheckResponse)

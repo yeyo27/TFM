@@ -23,6 +23,7 @@ class EmbeddingsCalculator:
         :return embeddings: list of embeddings for each line
         """
         lines = text.splitlines()
+        lines = list(filter(lambda line: line != "", lines))
         logging.debug(f"Number of lines {len(lines)}")
         return lines, self.calculate(lines)
 
@@ -38,7 +39,7 @@ class EmbeddingsCalculator:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    with open("../test/example_from_readability.txt") as f:
+    with open("../test/clean_text_from_api.txt") as f:
         logging.debug("Creating embeddings calculator...")
         emb_calc = EmbeddingsCalculator()
         logging.debug("Calculator created")
@@ -47,4 +48,3 @@ if __name__ == "__main__":
         logging.debug("Calculating embeddings...")
         embeddings = emb_calc.get_lines_embeddings_pairs(text)
         logging.debug(f"Calculation finished. Elapsed time: {time() - start} seconds")
-        print(embeddings[0])
