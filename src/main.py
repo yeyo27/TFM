@@ -1,6 +1,4 @@
-from fastapi import FastAPI, Request, Form, HTTPException, Header, Depends
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 from pydantic import BaseModel, HttpUrl
 from src.scraper import HtmlCleaner
 from src.embeddings_calculator import EmbeddingsCalculator
@@ -11,6 +9,7 @@ from urllib.parse import unquote
 class ReadableHTML(BaseModel):
     url: HttpUrl
     encoded_html: str
+    probably_readable: bool
 
 
 class HealthCheckResponse(BaseModel):
@@ -39,7 +38,7 @@ async def root():
 async def submit_article(readable_html: ReadableHTML):
     """
     :param readable_html:
-    :return:
+    :return dict: contains the url and the number of vectors
     """
     decoded_html = unquote(readable_html.encoded_html)
     cleaner = HtmlCleaner(decoded_html)
@@ -47,15 +46,23 @@ async def submit_article(readable_html: ReadableHTML):
 
     embeddings = calculator.get_lines_embeddings_pairs(clean_text)
 
-    database.create_or_replace_collection(readable_html.url)
-    database.insert_into(readable_html.url, embeddings)
+    collection_id = str(hash(readable_html.url))
+    database.create_or_replace_collection(collection_id)
+    database.insert_into(collection_id, embeddings)
 
-    return {"url": readable_html.url, "number_of_vectors": len(embeddings)}
+    return {"url": readable_html.url,
+            "collection_id": collection_id,
+            "number_of_vectors": len(embeddings),
+            "probably_readable": readable_html.probably_readable}
 
 
-@app.get("/api/v1/url", response_class=HTMLResponse)
-async def query_article():
-    return ""
+@app.get("/api/v1/url")
+async def query_collection(collection_id: str, query: str):
+    decoded_id = unquote(collection_id)
+    decoded_query = unquote(query)
+    query_embeddings = calculator.calculate(decoded_query)
+    hits = database.search_collection(decoded_id, query_embeddings)
+    return {"id": decoded_id, "query": decoded_query, "hits": hits}
 
 
 @app.get("/api/v1/healthz", response_model=HealthCheckResponse)

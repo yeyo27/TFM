@@ -15,7 +15,8 @@ class HtmlCleaner:
 
     def remove_elements_from_html(self) -> BeautifulSoup:
         """
-        :return:
+        Remove undesired elements from HTML
+        :return A beautiful soup object:
         """
         logging.debug("Removing undesired elements from HTML")
         for element in self.soup.findAll(self.stop_html_elements):
@@ -27,13 +28,14 @@ class HtmlCleaner:
 
     def get_text_from_html(self) -> str:
         """
-        :return:
+        Get text from HTML, selecting paragraphs and lists
+        :return clean text: elements joined by carriage return
         """
         # kill all script and style elements
         self.remove_elements_from_html()
         # get text
         logging.debug("Extracting HTML elements with text")
-        text_elements = self.soup.findAll(["p", "ol"])
+        text_elements = self.soup.findAll(["p", "ol", "ul", "blockquote"])
         logging.debug("Extracting text from elements")
         whole_text = ""
         for text_element in text_elements:
@@ -42,6 +44,12 @@ class HtmlCleaner:
         return whole_text
 
     def write_file(self, path: str, mode: str = "w") -> None:
+        """
+        Write html text to file
+        :param path:
+        :param mode:
+        :return:
+        """
         logging.debug("Writing file")
         with open(path, mode) as file:
             file.write(self.get_text_from_html())
@@ -52,7 +60,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     url = "https://es.wikipedia.org/wiki/Delphinidae"
     url1 = "https://web.dev/howbrowserswork/"
-    with open("../test/readable_web.html", "r") as f:
+    with open("../test/html_from_api.html", "r") as f:
         html_text = f.read()
         cleaner = HtmlCleaner(html_text)
-        cleaner.write_file("../test/example_from_readability.txt")
+        cleaner.write_file("../test/clean_text_from_api.txt")

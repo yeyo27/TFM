@@ -16,15 +16,22 @@ class EmbeddingsCalculator:
         return self.model.encode(sentence).tolist()
 
     def calculate_text_embeddings(self, text: str) -> tuple[list[str], list]:
+        """
+        Separates text into lines and calculates embeddings.
+        :param text:
+        :return lines: list of lines contained in the text
+        :return embeddings: list of embeddings for each line
+        """
         lines = text.splitlines()
+        lines = list(filter(lambda line: line != "", lines))
         logging.debug(f"Number of lines {len(lines)}")
         return lines, self.calculate(lines)
 
     def get_lines_embeddings_pairs(self, text: str) -> list[tuple]:
         """
         Get the lines along with their embeddings in pairs
-        :param text:
-        :return:
+        :param text: text to clean
+        :return list[tuple]: pairs of lines and their embeddings
         """
         lines, embeddings = self.calculate_text_embeddings(text)
         return list(zip(lines, embeddings))
@@ -32,7 +39,7 @@ class EmbeddingsCalculator:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    with open("../test/example_from_readability.txt") as f:
+    with open("../test/clean_text_from_api.txt") as f:
         logging.debug("Creating embeddings calculator...")
         emb_calc = EmbeddingsCalculator()
         logging.debug("Calculator created")
@@ -41,4 +48,3 @@ if __name__ == "__main__":
         logging.debug("Calculating embeddings...")
         embeddings = emb_calc.get_lines_embeddings_pairs(text)
         logging.debug(f"Calculation finished. Elapsed time: {time() - start} seconds")
-        print(embeddings[0])
