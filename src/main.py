@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, HttpUrl
-from src.scraper import HtmlCleaner
+from src.text_scraping import HtmlCleaner
 from src.embeddings_calculator import EmbeddingsCalculator
 from src.vector_db import VectorDB
 from urllib.parse import unquote

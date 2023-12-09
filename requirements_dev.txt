@@ -7,3 +7,5 @@ sentence-transformers~=2.2.2
 qdrant-client~=1.6.4
 numpy~=1.26.1
 pytest~=7.4.2
+pypdf~=3.17.1
+pymupdf~=1.23.7

@@ -1,4 +1,6 @@
 from bs4 import BeautifulSoup
+from pypdf import PdfReader
+import fitz
 import logging
 
 
@@ -56,7 +58,42 @@ class HtmlCleaner:
         logging.debug("Completed")
 
 
-if __name__ == "__main__":
+class PyMuPdfCleaner:
+    def __init__(self, pdf_path: str):
+        self.reader = fitz.open(pdf_path)
+
+    def extract_text_blocks(self) -> list:
+        text_blocks = []
+
+        for page_num in range(self.reader.page_count):
+            page = self.reader[page_num]
+            blocks = page.get_text("blocks")
+
+            for block in blocks:
+                text = block[4]
+                text_blocks.append(text)
+
+        return text_blocks
+
+    def close_reader(self):
+        self.reader.close()
+
+
+class PyPdfCleaner:
+    def __init__(self, file_path: str):
+        self.reader = PdfReader(file_path)
+
+    def get_metadata(self):
+        return self.reader.metadata
+
+    def text_from_pages(self):
+        text = ""
+        for page in self.reader.pages:
+            text += page.extract_text()
+        return text
+
+
+def html_test():
     logging.basicConfig(level=logging.DEBUG)
     url = "https://es.wikipedia.org/wiki/Delphinidae"
     url1 = "https://web.dev/howbrowserswork/"
@@ -64,3 +101,21 @@ if __name__ == "__main__":
         html_text = f.read()
         cleaner = HtmlCleaner(html_text)
         cleaner.write_file("../test/clean_text_from_api.txt")
+
+
+def pypdf_test():
+    logging.basicConfig(level=logging.DEBUG)
+    cleaner = PyPdfCleaner("../test/attention-is-all-you-need.pdf")
+    print(cleaner.text_from_pages())
+
+
+def pymupdf_test():
+    logging.basicConfig(level=logging.DEBUG)
+    cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
+    for block in cleaner.extract_text_blocks():
+        print(block)
+    cleaner.close_reader()
+
+
+if __name__ == "__main__":
+    pymupdf_test()
