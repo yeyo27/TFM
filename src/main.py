@@ -42,9 +42,9 @@ async def submit_article(readable_html: ReadableHTML):
     """
     decoded_html = unquote(readable_html.encoded_html)
     cleaner = HtmlCleaner(decoded_html)
-    clean_text = cleaner.get_text_from_html()
+    clean_text = cleaner.extract_text_from_html()
 
-    embeddings = calculator.get_lines_embeddings_pairs(clean_text)
+    embeddings = calculator.get_text_embeddings_pairs(clean_text)
 
     collection_id = str(hash(readable_html.url))
     await database.create_or_replace_collection(collection_id)

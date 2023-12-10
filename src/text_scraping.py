@@ -14,6 +14,7 @@ class HtmlCleaner:
 
         logging.debug("Parsing HTML")
         self.soup = BeautifulSoup(html_body, features="html.parser")
+        self.text = None
 
     def remove_elements_from_html(self) -> BeautifulSoup:
         """
@@ -28,7 +29,7 @@ class HtmlCleaner:
                 logging.error(f"{element} not found")
         return self.soup
 
-    def get_text_from_html(self) -> str:
+    def extract_text_from_html(self) -> str:
         """
         Get text from HTML, selecting paragraphs and lists
         :return clean text: elements joined by carriage return
@@ -45,6 +46,16 @@ class HtmlCleaner:
         logging.debug("Finished")
         return whole_text
 
+    def extract_text_lines(self) -> list[str]:
+        """
+        Get lines from text
+        :return lines: list of lines
+        """
+        lines = self.extract_text_from_html().splitlines()
+        lines = list(filter(lambda line: line != "", lines))
+        logging.debug(f"Number of lines {len(lines)}")
+        return lines
+
     def write_file(self, path: str, mode: str = "w") -> None:
         """
         Write html text to file
@@ -54,29 +65,33 @@ class HtmlCleaner:
         """
         logging.debug("Writing file")
         with open(path, mode) as file:
-            file.write(self.get_text_from_html())
+            file.write(self.extract_text_from_html())
         logging.debug("Completed")
 
 
 class PyMuPdfCleaner:
     def __init__(self, pdf_path: str):
-        self.reader = fitz.open(pdf_path)
+        self.document = fitz.open(pdf_path)
 
-    def extract_text_blocks(self) -> list:
+    def extract_text_blocks(self) -> list[str]:
         text_blocks = []
 
-        for page_num in range(self.reader.page_count):
-            page = self.reader[page_num]
+        for page_num in range(self.document.page_count):
+            page = self.document[page_num]
             blocks = page.get_text("blocks")
 
             for block in blocks:
-                text = block[4]
-                text_blocks.append(text)
+                if len(block[4].split(" ")) > 5:
+                    text = block[4].replace("\n", " ")
+                    text_blocks.append(text)
 
         return text_blocks
 
-    def close_reader(self):
-        self.reader.close()
+    def get_metadata(self):
+        return self.document.metadata
+
+    def close_document(self):
+        self.document.close()
 
 
 class PyPdfCleaner:
@@ -95,8 +110,8 @@ class PyPdfCleaner:
 
 def html_test():
     logging.basicConfig(level=logging.DEBUG)
-    url = "https://es.wikipedia.org/wiki/Delphinidae"
-    url1 = "https://web.dev/howbrowserswork/"
+    # url = "https://es.wikipedia.org/wiki/Delphinidae"
+    # url1 = "https://web.dev/howbrowserswork/"
     with open("../test/html_from_api.html", "r") as f:
         html_text = f.read()
         cleaner = HtmlCleaner(html_text)
@@ -112,9 +127,11 @@ def pypdf_test():
 def pymupdf_test():
     logging.basicConfig(level=logging.DEBUG)
     cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
-    for block in cleaner.extract_text_blocks():
+    blocks = cleaner.extract_text_blocks()
+    print(blocks)
+    for block in blocks:
         print(block)
-    cleaner.close_reader()
+    cleaner.close_document()
 
 
 if __name__ == "__main__":

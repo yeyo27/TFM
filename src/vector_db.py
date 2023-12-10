@@ -4,6 +4,7 @@ from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, ScoredPoint
 import logging
 from embeddings_calculator import EmbeddingsCalculator
+from src.text_scraping import HtmlCleaner, PyMuPdfCleaner
 
 
 class VectorDB:
@@ -55,7 +56,7 @@ class VectorDB:
                                         limit=limit)
 
 
-async def main():
+async def html_test():
     logging.basicConfig(level=logging.DEBUG)
 
     logging.debug("Starting vector database...")
@@ -66,19 +67,21 @@ async def main():
     emb_calc = EmbeddingsCalculator("average_word_embeddings_komninos")
     logging.debug("Calculator created")
 
-    with open("../test/clean_text_from_api.txt") as f:
+    with open("../test/html_from_api.html") as f:
         logging.debug("Reading file...")
-        context = f.read()
+        html = f.read()
+        cleaner = HtmlCleaner(html)
+        lines = cleaner.extract_text_lines()
 
         logging.debug("Calculating embeddings...")
-        embeddings = emb_calc.get_lines_embeddings_pairs(context)
+        embeddings = emb_calc.get_text_embeddings_pairs(lines)
 
         logging.debug("Creating collection 'test'...")
         await db.create_or_replace_collection("test")
 
         logging.debug("Inserting embeddings into 'test' collection...")
         await db.insert_into("test", embeddings)
-        logging.debug(db.client.count(collection_name="test"))
+        logging.debug(await db.client.count(collection_name="test"))
 
         logging.debug("Calculating query embeddings...")
         query = "What are the major browsers today?"
@@ -91,6 +94,42 @@ async def main():
             logging.debug(hit)
 
 
+async def pdf_test():
+    logging.basicConfig(level=logging.DEBUG)
+
+    logging.debug("Starting vector database...")
+    db = VectorDB()
+    logging.debug("Database initiated")
+
+    logging.debug("Creating embeddings calculator...")
+    emb_calc = EmbeddingsCalculator("paraphrase-multilingual-MiniLM-L12-v2")
+    logging.debug("Calculator created")
+
+    logging.debug("Reading file...")
+    cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
+    blocks = cleaner.extract_text_blocks()
+
+    logging.debug("Calculating embeddings...")
+    embeddings = emb_calc.get_text_embeddings_pairs(blocks)
+
+    logging.debug("Creating collection 'test'...")
+    await db.create_or_replace_collection("test", 384)
+
+    logging.debug("Inserting embeddings into 'test' collection...")
+    await db.insert_into("test", embeddings)
+    logging.debug(await db.client.count(collection_name="test"))
+
+    logging.debug("Calculating query embeddings...")
+    query = "How can we describe attention functions?"
+    query_embeddings = emb_calc.calculate(query)
+
+    logging.debug("Searching database...")
+    hits = await db.search_collection("test", query_embeddings)
+    logging.debug(query)
+    for hit in hits:
+        logging.debug(hit)
+
+
 if __name__ == "__main__":
     """
     model with decent results using our example webpage:
@@ -98,4 +137,4 @@ if __name__ == "__main__":
     - average_word_embeddings_komninos (size=300, measure > 0.7)
     - distiluse-base-multilingual-cased-v1 (size=512, measure ~= 0.596)
     """
-    asyncio.run(main())
+    asyncio.run(pdf_test())
