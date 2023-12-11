@@ -1,6 +1,6 @@
 import '../styles/App.css';
 import Header from './Header';
-import MainUrl from './MainUrl';
+import { Outlet } from "react-router-dom";
 
 function App() {
     return (
@@ -12,7 +12,7 @@ function App() {
 				</header>
 
 				<main className="h-[100%] relative border-2 border-white">
-					<MainUrl />
+					<Outlet />
 				</main>
 				
 				<footer className="min-h-[100%] relative border-2 border-white">

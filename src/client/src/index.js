@@ -1,13 +1,50 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 import './styles/index.css';
 import App from './components/App';
+import MainRoot from './components/MainRoot';
+import MainUrl from './components/MainUrl';
+import MainPdf from './components/MainPdf';
+import MainQuery from './components/MainQuery';
+import ErrorPage from "./components/ErrorPage";
 import reportWebVitals from './reportWebVitals';
+
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/",
+        element: <MainRoot />,
+      },
+      {
+        path: "/url",
+        element: <MainUrl/>,
+      },
+      {
+        path: "/pdf",
+        element: <MainPdf/>,
+      },
+      {
+        path: "/query/:collectionId",
+        element: <MainQuery/>,
+      },
+    ],
+  },
+]);
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 

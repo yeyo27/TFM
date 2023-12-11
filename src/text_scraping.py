@@ -1,7 +1,16 @@
+import requests
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
 import fitz
 import logging
+from readabilipy import simple_json_from_html_string
+
+
+def get_readable_html(url: str) -> str:
+    logging.debug("Requesting HTML")
+    response = requests.get(url)
+    article = simple_json_from_html_string(response.text, use_readability=False)
+    return article["content"]
 
 
 class HtmlCleaner:
@@ -70,8 +79,11 @@ class HtmlCleaner:
 
 
 class PyMuPdfCleaner:
-    def __init__(self, pdf_path: str):
-        self.document = fitz.open(pdf_path)
+    def __init__(self,  pdf_path: str = None, mem_file: bytes = None,):
+        if mem_file is None:
+            self.document = fitz.open(pdf_path)
+        else:
+            self.document = fitz.open(stream=mem_file, filetype="pdf")
 
     def extract_text_blocks(self) -> list[str]:
         text_blocks = []
@@ -111,11 +123,10 @@ class PyPdfCleaner:
 def html_test():
     logging.basicConfig(level=logging.DEBUG)
     # url = "https://es.wikipedia.org/wiki/Delphinidae"
-    # url1 = "https://web.dev/howbrowserswork/"
-    with open("../test/html_from_api.html", "r") as f:
-        html_text = f.read()
-        cleaner = HtmlCleaner(html_text)
-        cleaner.write_file("../test/clean_text_from_api.txt")
+    url1 = "https://web.dev/howbrowserswork/"
+    html_text = get_readable_html(url1)
+    cleaner = HtmlCleaner(html_text)
+    cleaner.write_file("../test/readabilipy_text.txt")
 
 
 def pypdf_test():
@@ -128,11 +139,11 @@ def pymupdf_test():
     logging.basicConfig(level=logging.DEBUG)
     cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
     blocks = cleaner.extract_text_blocks()
-    print(blocks)
+    print(cleaner.get_metadata())
     for block in blocks:
         print(block)
     cleaner.close_document()
 
 
 if __name__ == "__main__":
-    pymupdf_test()
+    html_test()

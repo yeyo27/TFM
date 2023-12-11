@@ -1,7 +1,7 @@
 import asyncio
 
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, ScoredPoint
+from qdrant_client.models import Distance, VectorParams, PointStruct
 import logging
 from embeddings_calculator import EmbeddingsCalculator
 from src.text_scraping import HtmlCleaner, PyMuPdfCleaner
@@ -11,7 +11,7 @@ class VectorDB:
     def __init__(self):
         self.client = AsyncQdrantClient(":memory:")
 
-    async def create_or_replace_collection(self, name: str, size: int = 300) -> None:
+    async def create_or_replace_collection(self, name: str, size: int = 384) -> None:
         """
         Create or replace a collection in the QDrant client
         :param name: name of the collection
@@ -64,10 +64,10 @@ async def html_test():
     logging.debug("Database initiated")
 
     logging.debug("Creating embeddings calculator...")
-    emb_calc = EmbeddingsCalculator("average_word_embeddings_komninos")
+    emb_calc = EmbeddingsCalculator()
     logging.debug("Calculator created")
 
-    with open("../test/html_from_api.html") as f:
+    with open("../test/readability.html") as f:
         logging.debug("Reading file...")
         html = f.read()
         cleaner = HtmlCleaner(html)
@@ -108,12 +108,13 @@ async def pdf_test():
     logging.debug("Reading file...")
     cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
     blocks = cleaner.extract_text_blocks()
+    cleaner.close_document()
 
     logging.debug("Calculating embeddings...")
     embeddings = emb_calc.get_text_embeddings_pairs(blocks)
 
     logging.debug("Creating collection 'test'...")
-    await db.create_or_replace_collection("test", 384)
+    await db.create_or_replace_collection("test")
 
     logging.debug("Inserting embeddings into 'test' collection...")
     await db.insert_into("test", embeddings)
@@ -137,4 +138,4 @@ if __name__ == "__main__":
     - average_word_embeddings_komninos (size=300, measure > 0.7)
     - distiluse-base-multilingual-cased-v1 (size=512, measure ~= 0.596)
     """
-    asyncio.run(pdf_test())
+    asyncio.run(html_test())
