@@ -2,49 +2,63 @@ from sentence_transformers import SentenceTransformer
 from time import time
 import logging
 
+from src.text_scraping import HtmlCleaner, PyMuPdfCleaner
+
 
 class EmbeddingsCalculator:
-    def __init__(self, model_name="average_word_embeddings_komninos"):
+    def __init__(self, model_name="paraphrase-multilingual-MiniLM-L12-v2"):
         self.model = SentenceTransformer(model_name)
 
-    def calculate(self, sentence: str | list[str]) -> list:
+    def calculate(self, text_unit: str | list[str]) -> list:
         """
         Calculate embeddings using the model
-        :param sentence: the sentence to embed
+        :param text_unit: the unit or list of units of text to embed.
         :return:
         """
-        return self.model.encode(sentence).tolist()
+        return self.model.encode(text_unit).tolist()
 
-    def calculate_text_embeddings(self, text: str) -> tuple[list[str], list]:
+    def get_text_embeddings_pairs(self, text_unit: str | list[str]) -> list[tuple]:
         """
-        Separates text into lines and calculates embeddings.
-        :param text:
-        :return lines: list of lines contained in the text
-        :return embeddings: list of embeddings for each line
+        Get the text fragments along with their embeddings, in pairs.
+        :param text_unit: the unit or list of units of text to embed.
+        :return list[tuple]: pairs of lines and their embeddings.
         """
-        lines = text.splitlines()
-        lines = list(filter(lambda line: line != "", lines))
-        logging.debug(f"Number of lines {len(lines)}")
-        return lines, self.calculate(lines)
-
-    def get_lines_embeddings_pairs(self, text: str) -> list[tuple]:
-        """
-        Get the lines along with their embeddings in pairs
-        :param text: text to clean
-        :return list[tuple]: pairs of lines and their embeddings
-        """
-        lines, embeddings = self.calculate_text_embeddings(text)
-        return list(zip(lines, embeddings))
+        embeddings = self.calculate(text_unit)
+        return list(zip(text_unit, embeddings))
 
 
-if __name__ == "__main__":
+def html_test():
     logging.basicConfig(level=logging.DEBUG)
-    with open("../test/clean_text_from_api.txt") as f:
+    with open("../test/html_from_api.html", "r") as f:
+        logging.debug("Cleaning html...")
+        html_text = f.read()
+        cleaner = HtmlCleaner(html_text)
+        lines = cleaner.extract_text_lines()
         logging.debug("Creating embeddings calculator...")
         emb_calc = EmbeddingsCalculator()
         logging.debug("Calculator created")
         start = time()
-        text = f.read()
         logging.debug("Calculating embeddings...")
-        embeddings = emb_calc.get_lines_embeddings_pairs(text)
+        embeddings = emb_calc.get_text_embeddings_pairs(lines)
         logging.debug(f"Calculation finished. Elapsed time: {time() - start} seconds")
+        logging.debug(embeddings)
+
+
+def pdf_test():
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug("Cleaning html...")
+    cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
+    blocks = cleaner.extract_text_blocks()
+    cleaner.close_document()
+    logging.debug("Creating embeddings calculator...")
+    emb_calc = EmbeddingsCalculator()
+    logging.debug("Calculator created")
+    start = time()
+    logging.debug("Calculating embeddings...")
+    embeddings = emb_calc.get_text_embeddings_pairs(blocks)
+    logging.debug(f"Calculation finished. Elapsed time: {time() - start} seconds")
+    logging.debug(embeddings)
+
+
+if __name__ == "__main__":
+    pdf_test()
