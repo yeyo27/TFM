@@ -51,8 +51,8 @@ async def root():
 @app.post("/api/v1/url")
 async def submit_article(article_url: ArticleUrl):
     """
-    :param article_url:
-    :return dict: contains the url and the number of vectors
+    :param article_url: the url of the article with some info about the domain
+    :return dict: contains url info, the collection_id in the vector database and the number of vectors
     """
 
     readable_html = get_readable_html(article_url.href)

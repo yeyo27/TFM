@@ -33,7 +33,7 @@ const router = createBrowserRouter([
         element: <MainPdf/>,
       },
       {
-        path: "/query/:collectionId",
+        path: "/query/:collectionId/:sourceName",
         element: <MainQuery/>,
       },
     ],

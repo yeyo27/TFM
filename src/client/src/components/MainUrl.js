@@ -38,10 +38,11 @@ function MainUrl() {
 
             const responseData = await response.json();
             console.log('Response data:', responseData);
-            navigate(`../query/${responseData.collection_id}`);
+            navigate(`../query/${responseData.collection_id}/${encodeURIComponent(url.href)}`);
 
         } catch (error) {
             console.error('Error:', error.message);
+            // TODO diplay error message
         }
     }
     
