@@ -1,0 +1,14 @@
+beautifulsoup4~=4.12.2
+nltk~=3.8.1
+fastapi~=0.100.0
+uvicorn~=0.22.0
+pydantic~=2.0.2
+sentence-transformers~=2.2.2
+qdrant-client~=1.6.4
+numpy~=1.26.1
+pytest~=7.4.2
+pypdf~=3.17.1
+pymupdf~=1.23.7
+requests~=2.31.0
+readabilipy~=0.2.0
+python-multipart~=0.0.6
