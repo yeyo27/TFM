@@ -1,8 +1,10 @@
 import { useState } from "react";
 import SubmitButton from "./SubmitButton";
+import { useNavigate } from "react-router-dom";
 
 function MainPdf() {
     const [selectedFile, setSelectedFile] = useState(null);
+    const navigate = useNavigate();
 
     const handleFileChange = (event) => {
         setSelectedFile(event.target.files[0]);
@@ -31,9 +33,11 @@ function MainPdf() {
 
             const responseData = await response.json();
             console.log('Response data:', responseData);
+            navigate(`../query/${responseData.collection_id}/${encodeURIComponent(selectedFile.name)}`);
 
         } catch(error) {
             console.error('Error uploading file', error);
+            // TODO display error message
         }
       }
     
@@ -44,7 +48,7 @@ function MainPdf() {
             <h2 className="text-base italic">powered by vector search</h2>
             <form className="p-10 w-[80%]">               
                 <input className="w-[80%] rounded-l-md flex-1 bg-[#303133] border-1 py-1.5 pl-3 text-gray-300 placeholder:text-gray-400 focus:ring-0 sm:text-base sm:leading-6"
-                type="file" onChange={handleFileChange} name="pdf"/>
+                type="file" onChange={handleFileChange} name="pdf" accept=".pdf"/>
                 <SubmitButton handleButtonClick={handleButtonClick} />
             </form>
         </div>
