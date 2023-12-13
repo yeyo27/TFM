@@ -1,14 +1,29 @@
 # Unveiling a Dynamic Virtual Assistant Powered by Vector Search.
 TFM of master in Big Data and Artificial Intelligence
 
-Steps to follow (initial prototype):
-<ul>
-<li>Obtain datasets (only webs initially)</li>
-<li>Calculate dataset embeddings</li>
-<li>Store embeddings in Qdrant (will discuss later what db to choose)</li>
-<li>Build api and frontend for prototype</li>
-<li>Connect frontend and backend</li>
-</ul>
+## Running development Web Client
+First, install dependencies:
+```commandline
+$ npm install react react-dom react-router-dom@6
+```
+```commandline
+$ npm install react react-dom react-router-dom@6
+```
+Open the Command Line and introduce the following:
+```commandline
+$ git clone https://github.com/yeyo27/TFM.git
+```
+
+```commandline
+$ cd ./TFM/src/client
+```
+
+```commandline
+$ npm start
+```
+ 
+## Running development API Server:
+In the root of the cloned repository:
 
 ## Obtain datasets
 <ol>
