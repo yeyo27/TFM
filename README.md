@@ -2,22 +2,19 @@
 TFM of master in Big Data and Artificial Intelligence
 
 ## Running development Web Client
-First, install dependencies:
-```commandline
-$ npm install react react-dom react-router-dom@6
-```
-```commandline
-$ npm install react react-dom react-router-dom@6
-```
 Open the Command Line and introduce the following:
 ```commandline
 $ git clone https://github.com/yeyo27/TFM.git
 ```
-
+Move to the main directory of the client:
 ```commandline
 $ cd ./TFM/src/client
 ```
-
+Install dependencies:
+```commandline
+$ npm install
+```
+Anf finally run:
 ```commandline
 $ npm start
 ```
