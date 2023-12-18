@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 from src.text_scraping import HtmlCleaner, PyMuPdfCleaner, get_readable_html
 from src.embeddings_calculator import EmbeddingsCalculator
+from src.question_generator import QuestionGeneratorTransformers
 from src.vector_db import VectorDB
 from urllib.parse import unquote
 
@@ -36,6 +37,8 @@ calculator = EmbeddingsCalculator()
 
 database = VectorDB()
 
+generator = QuestionGeneratorTransformers()
+
 
 @app.get("/")
 async def root():
@@ -60,7 +63,8 @@ async def submit_article(article_url: ArticleUrl):
     cleaner = HtmlCleaner(readable_html)
     lines = cleaner.extract_text_lines()
 
-    embeddings = calculator.get_text_embeddings_pairs(lines)
+    questions = generator.generate_questions(lines)
+    embeddings = calculator.get_questions_embeddings(questions, lines)
 
     collection_id = str(hash(article_url.href))
     await database.create_or_replace_collection(collection_id)
@@ -81,8 +85,8 @@ async def submit_pdf(pdf: UploadFile = File(...)):
     collection_id = str(hash(pdf.filename))
     cleaner = PyMuPdfCleaner(mem_file=bytes_content)
     blocks = cleaner.extract_text_blocks()
-
-    embeddings = calculator.get_text_embeddings_pairs(blocks)
+    questions = generator.generate_questions(blocks)
+    embeddings = calculator.get_questions_embeddings(questions, blocks)
 
     await database.create_or_replace_collection(collection_id)
     await database.insert_into(collection_id, embeddings)

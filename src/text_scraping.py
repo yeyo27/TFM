@@ -93,7 +93,7 @@ class PyMuPdfCleaner:
             blocks = page.get_text("blocks")
 
             for block in blocks:
-                if len(block[4].split(" ")) > 5:
+                if len(block[4].split(" ")) > 8:
                     text = block[4].replace("\n", " ")
                     text_blocks.append(text)
 
@@ -140,10 +140,10 @@ def pymupdf_test():
     cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
     blocks = cleaner.extract_text_blocks()
     print(cleaner.get_metadata())
-    for block in blocks:
-        print(block)
+    for block in blocks[:10]:
+        print(block, "\n")
     cleaner.close_document()
 
 
 if __name__ == "__main__":
-    html_test()
+    pymupdf_test()

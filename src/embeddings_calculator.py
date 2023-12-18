@@ -6,7 +6,7 @@ from src.text_scraping import HtmlCleaner, PyMuPdfCleaner
 
 
 class EmbeddingsCalculator:
-    def __init__(self, model_name="paraphrase-multilingual-MiniLM-L12-v2"):
+    def __init__(self, model_name="average_word_embeddings_komninos"):
         self.model = SentenceTransformer(model_name)
 
     def calculate(self, text_unit: str | list[str]) -> list:
@@ -17,14 +17,16 @@ class EmbeddingsCalculator:
         """
         return self.model.encode(text_unit).tolist()
 
-    def get_text_embeddings_pairs(self, text_unit: str | list[str]) -> list[tuple]:
+    def get_questions_embeddings(self, questions: list[str], answers: list[str]) -> list[tuple]:
         """
-        Get the text fragments along with their embeddings, in pairs.
-        :param text_unit: the unit or list of units of text to embed.
+        Calculates the embeddings of the questions, returning a list containing the questions, embeddings of the
+        questions and the corresponding answers.
+        :param answers:
+        :param questions:
         :return list[tuple]: pairs of lines and their embeddings.
         """
-        embeddings = self.calculate(text_unit)
-        return list(zip(text_unit, embeddings))
+        questions_embeddings = self.calculate(questions)
+        return list(zip(questions, questions_embeddings, answers))
 
 
 def html_test():
