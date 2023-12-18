@@ -5,13 +5,14 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 import logging
 from embeddings_calculator import EmbeddingsCalculator
 from src.text_scraping import HtmlCleaner, PyMuPdfCleaner
+from src.question_generator import QuestionGeneratorTransformers
 
 
 class VectorDB:
     def __init__(self):
         self.client = AsyncQdrantClient(":memory:")
 
-    async def create_or_replace_collection(self, name: str, size: int = 384) -> None:
+    async def create_or_replace_collection(self, name: str, size: int = 300) -> None:
         """
         Create or replace a collection in the QDrant client
         :param name: name of the collection
@@ -36,13 +37,13 @@ class VectorDB:
                 PointStruct(
                     id=idx,
                     vector=pair[1],
-                    payload={"answer": pair[0]}
+                    payload={"question": pair[0], "answer": pair[2]}
                 )
                 for idx, pair in enumerate(lines_vectors) if all(element != 0.0 for element in pair[1])
             ]
         )
 
-    async def search_collection(self, name: str, query_vector: list, limit: int = 5):
+    async def search_collection(self, name: str, query_vector: list, limit: int = 3):
         """
         Search in a collection
         :param name: name of a collection
@@ -52,7 +53,7 @@ class VectorDB:
         """
         return await self.client.search(collection_name=name,
                                         query_vector=query_vector,
-                                        with_vectors=True,
+                                        with_vectors=False,
                                         limit=limit)
 
 
@@ -64,20 +65,28 @@ async def html_test():
     logging.debug("Database initiated")
 
     logging.debug("Creating embeddings calculator...")
-    emb_calc = EmbeddingsCalculator()
+    emb_calc = EmbeddingsCalculator("average_word_embeddings_komninos")
     logging.debug("Calculator created")
+
+    logging.debug("Creating questions generator...")
+    question_generator = QuestionGeneratorTransformers()
+    logging.debug("Generator created")
 
     with open("../test/readability.html") as f:
         logging.debug("Reading file...")
         html = f.read()
         cleaner = HtmlCleaner(html)
+        logging.debug("Extracting text...")
         lines = cleaner.extract_text_lines()
 
+        logging.debug("Generating questions...")
+        questions = question_generator.generate_questions(lines)
+
         logging.debug("Calculating embeddings...")
-        embeddings = emb_calc.get_text_embeddings_pairs(lines)
+        embeddings = emb_calc.get_questions_embeddings(questions, lines)
 
         logging.debug("Creating collection 'test'...")
-        await db.create_or_replace_collection("test")
+        await db.create_or_replace_collection("test", 300)
 
         logging.debug("Inserting embeddings into 'test' collection...")
         await db.insert_into("test", embeddings)
@@ -102,26 +111,33 @@ async def pdf_test():
     logging.debug("Database initiated")
 
     logging.debug("Creating embeddings calculator...")
-    emb_calc = EmbeddingsCalculator("paraphrase-multilingual-MiniLM-L12-v2")
+    emb_calc = EmbeddingsCalculator("average_word_embeddings_komninos")
     logging.debug("Calculator created")
+
+    logging.debug("Creating questions generator...")
+    question_generator = QuestionGeneratorTransformers()
+    logging.debug("Generator created")
 
     logging.debug("Reading file...")
     cleaner = PyMuPdfCleaner("../test/attention-is-all-you-need.pdf")
     blocks = cleaner.extract_text_blocks()
     cleaner.close_document()
 
+    logging.debug("Generating questions...")
+    questions = question_generator.generate_questions(blocks)
+
     logging.debug("Calculating embeddings...")
-    embeddings = emb_calc.get_text_embeddings_pairs(blocks)
+    embeddings = emb_calc.get_questions_embeddings(questions, blocks)
 
     logging.debug("Creating collection 'test'...")
-    await db.create_or_replace_collection("test")
+    await db.create_or_replace_collection("test", 300)
 
     logging.debug("Inserting embeddings into 'test' collection...")
     await db.insert_into("test", embeddings)
     logging.debug(await db.client.count(collection_name="test"))
 
     logging.debug("Calculating query embeddings...")
-    query = "How can we describe attention functions?"
+    query = "What is an attention function?"
     query_embeddings = emb_calc.calculate(query)
 
     logging.debug("Searching database...")

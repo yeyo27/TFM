@@ -9,6 +9,7 @@ Paul Irish
 Tali Garsiel
 This comprehensive primer on the internal operations of WebKit and Gecko is the result of much research done by Israeli developer Tali Garsiel. Over a few years, she reviewed all the published data about browser internals and spent a lot of time reading web browser source code. She wrote:
 Tali published her research on her site, but we knew it deserved a larger audience, so we've cleaned it up and republished it here.
+As a web developer, learning the internals of browser operations helps you make better decisions and know the justifications behind development best practices. While this is a rather lengthy document, we recommend you spend some time digging in; we guarantee you'll be glad you did.Paul Irish, Chrome Developer Relations
 As a web developer, learning the internals of browser operations helps you make better decisions and know the justifications behind development best practices. While this is a rather lengthy document, we recommend you spend some time digging in; we guarantee you'll be glad you did.
 Paul Irish, Chrome Developer Relations
 Web browsers are the most widely used software. In this primer, I will explain how they work behind the scenes. We will see what happens when you type google.com in the address bar until you see the Google page on the browser screen.
