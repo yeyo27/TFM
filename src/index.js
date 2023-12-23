@@ -14,6 +14,9 @@ import ErrorPage from "./components/ErrorPage";
 import reportWebVitals from './reportWebVitals';
 import LogIn from './routes/Login';
 import SignUp from './routes/Signup';
+import MainHistory from './components/MainHistory';
+import ProtectedRoute from './routes/ProtectedRoute';
+import { AuthProvider } from './auth/AuthProvider';
 
 
 const router = createBrowserRouter([
@@ -25,6 +28,16 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <MainRoot />,
+      },
+      {
+        path: "/history",
+        element: <ProtectedRoute />,
+        children:[
+          {
+            path: "/history",
+            element: <MainHistory/>
+          }
+        ],
       },
       {
         path: "/url",
@@ -54,7 +67,9 @@ const router = createBrowserRouter([
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+	<AuthProvider>
+    	<RouterProvider router={router} />
+    </ AuthProvider>
   </React.StrictMode>
 );
 

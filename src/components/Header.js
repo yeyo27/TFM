@@ -3,28 +3,30 @@ import HeaderElementLeft from './HeaderElementLeft';
 import HistoryIcon from '../icons/HistoryIcon.svg';
 import MenuIcon from '../icons/MenuIcon.svg';
 import SignInIcon from '../icons/SignInIcon.svg';
+import UserIcon from '../icons/UserIcon.svg';
 import { useAuth } from '../auth/AuthProvider';
 
 function Header() {
     const auth = useAuth();
 
-    const signInText = auth.isAuthenticated ? "user@email.com": "Sign In";
+    const userEmail = "user@email.com";
 
     return (
-    <nav className="w-[100%] h-[100%] flex flex-row gap-2 justify-between">
-        <div className="p-2 w-[50%] h-[100%]">
+    <nav className="w-[100%] h-[100%] flex flex-row justify-between">
+        <div className="p-2 w-[70%] h-[100%]">
             <ul className="flex flex-row justify-start h-[100%] w-[100%]">
                 <HeaderElementLeft href="/url" text="From URL"/>
                 <HeaderElementLeft href="/pdf" text="From PDF"/>
             </ul>
         </div>
         <div className="p-2 h-[100%]">
-            <ul className="flex flex-row justify-end h-[100%] w-[100%] -space-x-2">
-                <HeaderElementRight href="/" icon={HistoryIcon} text="History"/>
+            <ul className="flex flex-row justify-between h-[100%] w-[100%] gap-8 p-6">
+                <HeaderElementRight href="/history" icon={HistoryIcon} text="History"/>
 
                 <HeaderElementRight href="/" icon={MenuIcon} text="Menu"/>
 
-                <HeaderElementRight href="/login" icon={SignInIcon} text={signInText}/>
+                {auth.isAuthenticated ? <HeaderElementRight href="/history" icon={UserIcon} text={userEmail}/> :
+                    <HeaderElementRight href="/login" icon={SignInIcon} text="Sign In"/>}
             </ul>
         </div>
     </nav>
