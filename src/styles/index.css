@@ -7,11 +7,6 @@ html {
     background: #161718;
     background-size: 224px;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
- 
 /* width */
 ::-webkit-scrollbar {
     width: 10px;

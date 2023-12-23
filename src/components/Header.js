@@ -3,8 +3,13 @@ import HeaderElementLeft from './HeaderElementLeft';
 import HistoryIcon from '../icons/HistoryIcon.svg';
 import MenuIcon from '../icons/MenuIcon.svg';
 import SignInIcon from '../icons/SignInIcon.svg';
+import { useAuth } from '../auth/AuthProvider';
 
 function Header() {
+    const auth = useAuth();
+
+    const signInText = auth.isAuthenticated ? "user@email.com": "Sign In";
+
     return (
     <nav className="w-[100%] h-[100%] flex flex-row gap-2 justify-between">
         <div className="p-2 w-[50%] h-[100%]">
@@ -19,7 +24,7 @@ function Header() {
 
                 <HeaderElementRight href="/" icon={MenuIcon} text="Menu"/>
 
-                <HeaderElementRight href="/" icon={SignInIcon} text="Sign In"/>
+                <HeaderElementRight href="/login" icon={SignInIcon} text={signInText}/>
             </ul>
         </div>
     </nav>

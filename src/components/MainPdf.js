@@ -1,9 +1,11 @@
 import { useState } from "react";
 import SubmitButton from "./SubmitButton";
+import LoadingIcon from "./LoadingIcon";
 import { useNavigate } from "react-router-dom";
 
 function MainPdf() {
     const [selectedFile, setSelectedFile] = useState(null);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleFileChange = (event) => {
@@ -11,6 +13,8 @@ function MainPdf() {
       };
 
     async function handleButtonClick() {
+        setLoading(true);
+
         const apiUrl = "http://127.0.0.1:8080/api/v1/pdf";
 
         const formData = new FormData();
@@ -37,6 +41,7 @@ function MainPdf() {
 
         } catch(error) {
             console.error('Error uploading file', error);
+            setLoading(false);
             // TODO display error message
         }
       }
@@ -51,6 +56,7 @@ function MainPdf() {
                 type="file" onChange={handleFileChange} name="pdf" accept=".pdf"/>
                 <SubmitButton handleButtonClick={handleButtonClick} />
             </form>
+            {loading && <LoadingIcon />}
         </div>
     )
 }

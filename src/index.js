@@ -12,6 +12,8 @@ import MainPdf from './components/MainPdf';
 import MainQuery from './components/MainQuery';
 import ErrorPage from "./components/ErrorPage";
 import reportWebVitals from './reportWebVitals';
+import LogIn from './routes/Login';
+import SignUp from './routes/Signup';
 
 
 const router = createBrowserRouter([
@@ -38,6 +40,14 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path:"/login",
+    element: <LogIn />
+  },
+  {
+    path:"/signup",
+    element: <SignUp />
+  }
 ]);
 
 
