@@ -1,6 +1,8 @@
-from fastapi import FastAPI, UploadFile, File
+from datetime import datetime
+
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, EmailStr
 from src.text_scraping import HtmlCleaner, PyMuPdfCleaner, get_readable_html
 from src.embeddings_calculator import EmbeddingsCalculator
 from src.question_generator import QuestionGeneratorTransformers
@@ -13,6 +15,17 @@ class ArticleUrl(BaseModel):
     origin: HttpUrl
     hostname: str
     pathname: str
+
+
+class NewUser(BaseModel):
+    email: EmailStr
+    password: str
+    confirm_password: str
+
+
+class UserCredentials(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class HealthCheckResponse(BaseModel):
@@ -49,6 +62,27 @@ async def root():
         dict: A dictionary with a single key-value pair containing the message of the API.
     """
     return {"message": "TFM API v1.0"}
+
+
+@app.post("/api/v1/login")
+async def login(credentials: UserCredentials):
+    user_exists = True
+    if not user_exists:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return {"message": "User logged in", "credentials": credentials}
+
+
+@app.post("/api/v1/signup")
+async def signup(user_data: NewUser):
+    if user_data.password != user_data.confirm_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+    # store credentials in db
+    new_user = {
+        "email": user_data.email,
+        "password": user_data.password,  # maybe hash it
+        "created_at": datetime.now(),
+    }
+    return {"message": "User created successfully", "new_user": new_user}
 
 
 @app.post("/api/v1/url")
