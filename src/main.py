@@ -1,13 +1,51 @@
 from datetime import datetime
+from os import getenv
+from pathlib import Path
+from typing import Annotated
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, HttpUrl, EmailStr
 from src.text_scraping import HtmlCleaner, PyMuPdfCleaner, get_readable_html
 from src.embeddings_calculator import EmbeddingsCalculator
 from src.question_generator import QuestionGeneratorTransformers
 from src.vector_db import VectorDB
 from urllib.parse import unquote
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=Path("../.env"))
+SECRET_KEY = getenv("SECRET_KEY")
+ALGORITHM = getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+
+fake_users_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "email": "johndoe@example.com",
+        "hashed_password": "fakehashedsecret",
+    },
+    "alice": {
+        "username": "alice",
+        "full_name": "Alice Wonderson",
+        "hashed_password": "fakehashedsecret2",
+    },
+}
+
+
+class NewUser(BaseModel):
+    email: EmailStr
+    name: str
+    password: str
+    confirm_password: str
+
+
+class User(BaseModel):
+    username: str
+    email: EmailStr
+    name: str
 
 
 class ArticleUrl(BaseModel):
@@ -17,22 +55,13 @@ class ArticleUrl(BaseModel):
     pathname: str
 
 
-class NewUser(BaseModel):
-    email: EmailStr
-    password: str
-    confirm_password: str
-
-
-class UserCredentials(BaseModel):
-    email: EmailStr
-    password: str
-
-
 class HealthCheckResponse(BaseModel):
     status: str
 
 
 app = FastAPI()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 origins = [
     "http://localhost:3000",
@@ -53,6 +82,17 @@ database = VectorDB()
 generator = QuestionGeneratorTransformers()
 
 
+def fake_decode_token(token):
+    return User(
+        username=token + "fakedecoded", email="john@example.com", name="John Doe"
+    )
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    user = fake_decode_token(token)
+    return user
+
+
 @app.get("/")
 async def root():
     """
@@ -65,7 +105,7 @@ async def root():
 
 
 @app.post("/api/v1/login")
-async def login(credentials: UserCredentials):
+async def login(credentials: User):
     user_exists = True
     if not user_exists:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -79,10 +119,16 @@ async def signup(user_data: NewUser):
     # store credentials in db
     new_user = {
         "email": user_data.email,
+        "name": user_data.name,
         "password": user_data.password,  # maybe hash it
         "created_at": datetime.now(),
     }
     return {"message": "User created successfully", "new_user": new_user}
+
+
+@app.get("/api/v1/history")
+def history(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"token": token}
 
 
 @app.post("/api/v1/url")
