@@ -9,6 +9,7 @@ function SignUp() {
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
     const [confirmPassword, setConfirmPassword] = useState();
+    const [error, setError] = useState();
 
     const navigate = useNavigate();
 
@@ -18,12 +19,12 @@ function SignUp() {
         e.preventDefault();
 
         if (!email || !username|| !password || !confirmPassword) {
-            alert("Please fill in all fields");
+            setError("Please fill in all fields");
             return;
         }
 
         if (password !== confirmPassword) {
-            alert("Passwords do not match");
+            setError("Passwords do not match");
             return;
         }
 
@@ -39,12 +40,17 @@ function SignUp() {
                     password: password,
                     confirm_password: confirmPassword }),
             });
+            
+            const responseData = await response.json();
 
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                setError(responseData.detail)
+                throw new Error(`HTTP error!\n Status: ${response.status}\n details: ${responseData.detail}`);
             }
 
             console.log("Account created successfully");
+            
+            console.log('Response data:', responseData);
             alert("Account created successfully");
 
             navigate("/login");
@@ -70,6 +76,7 @@ function SignUp() {
                         <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
                             Create and account
                         </h1>
+                        {error && <p id="error" className="text-red-500 font-light">{error}</p>}
                         <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                         <div>
                                 <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your username</label>

@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { Navigate, useNavigate } from "react-router-dom";
 
-const API_URL = "http://127.0.0.1:8080/api/v1/login";
+const API_URL = "http://127.0.0.1:8080/api/v1/token";
 
 function LogIn() {
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
+    const [error, setError] = useState();
 
     const navigate = useNavigate();
 
@@ -16,27 +17,35 @@ function LogIn() {
         e.preventDefault();
 
         if (!username || !password) {
-            alert("Please fill in all fields");
+            setError("Please fill in all fields");
             return;
         }
+
+        const formData = new FormData();
+
+        formData.append("username", username);
+        formData.append("password", password);
 
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ username, password }),
+                body: formData,
             });
 
+            const responseData = await response.json();
+
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                setError(responseData.detail);
+                throw new Error(`HTTP error!\n Status: ${response.status}\n details: ${responseData.detail}`);
             }
+
+            console.log("User logged in");
+            console.log('Response data:', responseData);
 
             navigate("/");
 
         } catch(error) {
-            console.error(error);
+            console.error(error.message);
         }
     }
 
@@ -55,6 +64,7 @@ function LogIn() {
                         <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
                             Sign in to your account
                         </h1>
+                        {error && <p id="error" className="text-red-500 font-light">{error}</p>}
                         <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                             <div>
                                 <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your username</label>
