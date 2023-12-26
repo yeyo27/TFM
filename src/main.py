@@ -1,9 +1,10 @@
+import re
 from datetime import datetime, timedelta
 from os import getenv
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, HttpUrl, EmailStr
@@ -17,9 +18,11 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path("../.env"))
-SECRET_KEY = getenv("SECRET_KEY")
+ACCESS_TOKEN_SECRET_KEY = getenv("ACCESS_TOKEN_SECRET_KEY")
+REFRESH_TOKEN_SECRET_KEY = getenv("REFRESH_TOKEN_SECRET_KEY")
 ALGORITHM = getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
 
 fake_users_db = {
     "johndoe": {
@@ -89,6 +92,10 @@ fake_history_db = {
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class TokenRefresh(Token):
+    refresh_token: str
 
 
 class TokenData(BaseModel):
@@ -178,18 +185,64 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, ACCESS_TOKEN_SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=30)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, REFRESH_TOKEN_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
-            status_code=401,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        status_code=401,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, ACCESS_TOKEN_SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if not username:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = get_user(fake_users_db, username=token_data.username)
+    if not user:
+        raise credentials_exception
+    return user
+
+
+def refresh_current_user(x_authorization: Annotated[str, Header()]):
+    """
+    Get the refresh token from the request headers.
+    """
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    if not x_authorization:
+        raise credentials_exception
+    try:
+        refresh_token = re.search(r'Bearer\s+(\S+)', x_authorization).group(1)
+    except AttributeError:
+        raise credentials_exception
+
+    try:
+        payload = jwt.decode(refresh_token, REFRESH_TOKEN_SECRET_KEY, algorithms=[ALGORITHM])
+        # I do not know if expiry time is necessary to check
+        expiry_time = payload.get("exp")
+        if datetime.utcfromtimestamp(expiry_time) < datetime.utcnow():
+            raise credentials_exception
         username: str = payload.get("sub")
         if not username:
             raise credentials_exception
@@ -214,6 +267,10 @@ def insert_user_to_fake_db(user_data: NewUser):
     return fake_users_db[user_data.username]
 
 
+def get_fake_history(username):
+    return fake_history_db[username]
+
+
 @app.get("/")
 async def root():
     """
@@ -225,7 +282,7 @@ async def root():
     return {"message": "TFM API v1.0"}
 
 
-@app.post("/api/v1/token", response_model=Token)
+@app.post("/api/v1/token", response_model=TokenRefresh)
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     if not user:
@@ -233,7 +290,16 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
                             detail="Incorrect username or password",
                             headers={"WWW-Authenticate": "Bearer"})
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    refresh_token = create_refresh_token(data={"sub": user.username}, expires_delta=refresh_token_expires)
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+
+
+@app.post("/api/v1/token/refresh", response_model=Token)
+async def refresh(current_user: Annotated[User, Depends(refresh_current_user)]):
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(data={"sub": current_user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -250,57 +316,84 @@ async def signup(user_data: NewUser):
     return {"message": "User created successfully", "new_user": new_user}
 
 
-@app.get("/api/v1/history")
-async def history(current_user: Annotated[User, Depends(get_current_user)]):
+@app.get("/users/me/", response_model=User)
+async def read_users_me(
+        current_user: Annotated[User, Depends(get_current_user)]
+):
     return current_user
 
 
+@app.get("/api/v1/history")
+async def history(current_user: Annotated[User, Depends(get_current_user)]):
+    return get_fake_history(current_user.username)
+
+
+async def store_embeddings(collection_id: str, text_units: list[str]):
+    questions = generator.generate_questions(text_units)
+    embeddings = calculator.get_questions_embeddings(questions, text_units)
+    await database.insert_into(collection_id, embeddings)
+    return len(embeddings)
+
+
 @app.post("/api/v1/url")
-async def submit_article(article_url: ArticleUrl):
+async def submit_article(article_url: ArticleUrl, current_user: Annotated[User, Depends(get_current_user)]):
     """
+    :param current_user: contains information about the current session
     :param article_url: the url of the article with some info about the domain
     :return dict: contains url info, the collection_id in the vector database and the number of vectors
     """
+    # First check if collection already exists to avoid recreating it
+    collection_id = str(hash(article_url.href))
+    try:
+        await database.create_collection(collection_id)
+    except ValueError:
+        # collection already exists
+        return {"url": article_url.href,
+                "collection_id": collection_id,
+                "total_vectors": await database.count_collection(collection_id)}
 
     readable_html = get_readable_html(article_url.href)
 
     cleaner = HtmlCleaner(readable_html)
     lines = cleaner.extract_text_lines()
 
-    questions = generator.generate_questions(lines)
-    embeddings = calculator.get_questions_embeddings(questions, lines)
-
-    collection_id = str(hash(article_url.href))
-    await database.create_or_replace_collection(collection_id)
-    await database.insert_into(collection_id, embeddings)
+    total_vectors = await store_embeddings(collection_id, lines)
 
     return {"url": article_url.href,
             "collection_id": collection_id,
-            "number_of_vectors": len(embeddings)}
+            "total_vectors": total_vectors}
 
 
 @app.post("/api/v1/pdf")
-async def submit_pdf(pdf: UploadFile = File(...)):
+async def submit_pdf(current_user: Annotated[User, Depends(get_current_user)], pdf: UploadFile = File(...)):
     """
-    :param pdf:
+    :param current_user: contains information about the current session
+    :param pdf: the pdf file
     :return dict: contains the url and the number of vectors
     """
-    bytes_content = pdf.file.read()
+    # First check if collection already exists to avoid recreating it
     collection_id = str(hash(pdf.filename))
+    try:
+        await database.create_collection(collection_id)
+    except ValueError:
+        # collection already exists
+        return {"file_name": pdf.filename,
+                "collection_id": collection_id,
+                "total_vectors": await database.count_collection(collection_id)}
+
+    bytes_content = pdf.file.read()
+
     cleaner = PyMuPdfCleaner(mem_file=bytes_content)
     blocks = cleaner.extract_text_blocks()
-    questions = generator.generate_questions(blocks)
-    embeddings = calculator.get_questions_embeddings(questions, blocks)
 
-    await database.create_or_replace_collection(collection_id)
-    await database.insert_into(collection_id, embeddings)
+    total_vectors = await store_embeddings(collection_id, blocks)
 
     pdf.file.close()
     cleaner.close_document()
 
     return {"file_name": pdf.filename,
             "collection_id": collection_id,
-            "number_of_vectors": len(embeddings)}
+            "total_vectors": total_vectors}
 
 
 @app.get("/api/v1/query")
