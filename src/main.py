@@ -1,4 +1,5 @@
 import re
+import uuid
 from datetime import datetime, timedelta
 from os import getenv
 from pathlib import Path
@@ -46,25 +47,52 @@ fake_history_db = {
         [
             {
                 'id': 1,
-                'sourceName': 'url1.com',
+                'source_name': 'url1.com',
                 'date': '2022-01-01 12:00:00',
                 'query': 'What is the weather like?',
-                'response': 'The weather is sunny',
+                'responses': [{
+                    'id': 1,
+                    'version': 0,
+                    'score': 1.0,
+                    'payload': {
+                        'question': 'What is the weather like?',
+                        'answer': 'The weather is sunny',
+                    },
+                    'vector': None
+                }],
             },
             {
                 'id': 2,
-                'sourceName': 'url2.com',
+                'source_name': 'url2.com',
                 'date': '2031-01-01 12:00:00',
                 'query': 'What is the weather like?',
-                'response': 'The weather is nothing',
+                'responses': [{
+                    'id': 1,
+                    'version': 0,
+                    'score': 1.0,
+                    'payload': {
+                        'question': 'What is the weather like?',
+                        'answer': 'The weather is nothing',
+                    },
+                    'vector': None
+                }],
             },
             {
                 'id': 4,
                 'username': 'johndoe',
-                'sourceName': 'pdf1',
+                'source_name': 'pdf1',
                 'date': '2022-01-01 12:00:00',
                 'query': 'What is the weather like?',
-                'response': 'The weather is sunny',
+                'responses': [{
+                    'id': 1,
+                    'version': 0,
+                    'score': 1.0,
+                    'payload': {
+                        'question': 'What is the weather like?',
+                        'answer': 'The weather is sunny',
+                    },
+                    'vector': None
+                }],
             },
         ],
     "alice":
@@ -72,18 +100,36 @@ fake_history_db = {
             {
                 'id': 3,
                 'username': 'alice',
-                'sourceName': 'url3.com',
+                'source_name': 'url3.com',
                 'date': '2022-01-01 12:00:00',
                 'query': 'What is the sñkfñodfksd like?',
-                'response': 'The weather is skejfoiw',
+                'responses': [{
+                    'id': 1,
+                    'version': 0,
+                    'score': 0.55,
+                    'payload': {
+                        'question': 'What is the weather like?',
+                        'answer': 'The weather is 2343fsdvsdf',
+                    },
+                    'vector': None
+                }],
             },
             {
                 'id': 5,
                 'username': 'alice',
-                'sourceName': 'pdf3',
+                'source_name': 'pdf3',
                 'date': '2022-01-01 12:00:00',
                 'query': 'What is the weather like?',
-                'response': 'The weather is sunny',
+                'responses': [{
+                    'id': 1,
+                    'version': 0,
+                    'score': 0.55,
+                    'payload': {
+                        'question': 'What is the weather like?',
+                        'answer': 'The weather is 2343fsdvsdf',
+                    },
+                    'vector': None
+                }],
             }
         ],
 }
@@ -267,6 +313,19 @@ def insert_user_to_fake_db(user_data: NewUser):
     return fake_users_db[user_data.username]
 
 
+def insert_query_to_fake_db(username, source_name, query, hits):
+    fake_history_db[username].append(
+        {
+            'id': uuid.uuid4().hex,
+            'username': username,
+            'source_name': source_name,
+            'date': datetime.utcnow(),
+            'query': query,
+            'responses': hits,
+        })
+    return fake_history_db[username]
+
+
 def get_fake_history(username):
     return fake_history_db[username]
 
@@ -316,10 +375,8 @@ async def signup(user_data: NewUser):
     return {"message": "User created successfully", "new_user": new_user}
 
 
-@app.get("/users/me/", response_model=User)
-async def read_users_me(
-        current_user: Annotated[User, Depends(get_current_user)]
-):
+@app.get("/api/v1/users/me", response_model=User)
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
 
 
@@ -372,7 +429,7 @@ async def submit_pdf(current_user: Annotated[User, Depends(get_current_user)], p
     :return dict: contains the url and the number of vectors
     """
     # First check if collection already exists to avoid recreating it
-    collection_id = str(hash(pdf.filename))
+    collection_id = str(hash(current_user.username + pdf.filename))
     try:
         await database.create_collection(collection_id)
     except ValueError:
@@ -397,11 +454,13 @@ async def submit_pdf(current_user: Annotated[User, Depends(get_current_user)], p
 
 
 @app.get("/api/v1/query")
-async def query_collection(collection_id: str, query: str):
+async def query_collection(collection_id: str, query: str, source_name: str,
+                           current_user: Annotated[User, Depends(get_current_user)]):
     decoded_id = unquote(collection_id).strip()
     decoded_query = unquote(query)
     query_embeddings = calculator.calculate(decoded_query)
     hits = await database.search_collection(decoded_id, query_embeddings)
+    insert_query_to_fake_db(current_user.username, source_name, decoded_query, hits)
     return {"id": decoded_id, "query": decoded_query, "hits": hits}
 
 
