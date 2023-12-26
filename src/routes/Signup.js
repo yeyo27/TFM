@@ -50,6 +50,7 @@ function SignUp() {
 
             console.log("Account created successfully");
             
+            setError(null);
             console.log('Response data:', responseData);
             alert("Account created successfully");
 
