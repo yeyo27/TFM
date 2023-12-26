@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { Navigate, useNavigate } from "react-router-dom";
 
-const API_URL = "http://127.0.0.1:8080/api/v1/token";
-
 function LogIn() {
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
@@ -27,7 +25,7 @@ function LogIn() {
         formData.append("password", password);
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/token`, {
                 method: "POST",
                 body: formData,
             });
@@ -40,13 +38,13 @@ function LogIn() {
             }
             setError(null);
             
-            if (responseData.access_token) {
-                auth.saveUser(responseData);
+            if (responseData.access_token && responseData.refresh_token) {
+                auth.saveSessionInfo(responseData, {username: username, email: null});
+                console.log("User logged in");
+                navigate("/");
             }
-            console.log("User logged in");
+            
             console.log('Response data:', responseData);
-
-            navigate("/");
 
         } catch(error) {
             console.error(error.message);

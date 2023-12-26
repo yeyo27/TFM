@@ -2,20 +2,20 @@ import { useState } from "react";
 import SubmitButton from "./SubmitButton";
 import LoadingIcon from "./LoadingIcon";
 import { useNavigate } from "react-router-dom";
+import {useAuth} from "../auth/AuthProvider";
 
 function MainPdf() {
     const [selectedFile, setSelectedFile] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const auth = useAuth();
 
     const handleFileChange = (event) => {
         setSelectedFile(event.target.files[0]);
       };
 
     async function handleButtonClick() {
-        setLoading(true);
-
-        const apiUrl = "http://127.0.0.1:8080/api/v1/pdf";
+        setIsLoading(true);
 
         const formData = new FormData();
 
@@ -26,7 +26,10 @@ function MainPdf() {
 
             formData.append('pdf', selectedFile);
 
-            const response = await fetch(apiUrl, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/pdf`, {
+                headers: {
+                    'Authorization': `Bearer ${auth.accessToken}`
+                },
                 method: 'POST',
                 body: formData,
             });
@@ -37,11 +40,13 @@ function MainPdf() {
 
             const responseData = await response.json();
             console.log('Response data:', responseData);
-            navigate(`../query/${responseData.collection_id}/${encodeURIComponent(selectedFile.name)}`);
+            const lastDotIndex = selectedFile.name.lastIndexOf(".");
+            const fileName = selectedFile.name.slice(0, lastDotIndex);
+            navigate(`/../query/${responseData.collection_id}/${encodeURIComponent(fileName)}`);
 
         } catch(error) {
             console.error('Error uploading file', error);
-            setLoading(false);
+            setIsLoading(false);
             // TODO display error message
         }
       }
@@ -56,7 +61,7 @@ function MainPdf() {
                 type="file" onChange={handleFileChange} name="pdf" accept=".pdf"/>
                 <SubmitButton handleButtonClick={handleButtonClick} />
             </form>
-            {loading && <LoadingIcon />}
+            {isLoading && <LoadingIcon />}
         </div>
     )
 }

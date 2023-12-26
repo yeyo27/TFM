@@ -1,27 +1,28 @@
 import { useState } from "react";
 import SubmitQuery from "./SubmitQuery";
 import { useParams } from 'react-router-dom';
+import {useAuth} from "../auth/AuthProvider";
 
 function MainQuery() {
     const [textInput, setTextInput] = useState();
     const [responses, setResponses] = useState();
 
+    const auth = useAuth();
+
     const { collectionId, sourceName } = useParams();
     async function handleButtonClick() {
-        const apiUrl = "http://127.0.0.1:8080/api/v1/query";
-
         try {
             if (!textInput) {
                 throw new Error('No text input');
             }
-
-            const url = `${apiUrl}?collection_id=${encodeURIComponent(collectionId)}
-            &query=${encodeURIComponent(textInput)}`;
+            const url = `${process.env.REACT_APP_API_URL}/query?collection_id=${encodeURIComponent(collectionId)}
+            &query=${encodeURIComponent(textInput)}&source_name=${encodeURIComponent(sourceName)}`;
             
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${auth.accessToken}`
                 }
             });
 
@@ -62,10 +63,10 @@ function MainQuery() {
             
             {responses 
                 ? (
-                <div>
+                <div className="flex flex-col gap-2">
                     <p className="text-left">These are the fragments of your source that best match your question:</p>
                     <ul className="flex flex-col gap-4">
-                        {responses.map(response => <li className="border-2 border-white" key={response.id}>{response.payload.answer}</li>)}
+                        {responses.map(response => <li key={response.id}>{response.payload.answer}</li>)}
                     </ul>
                 </div>) 
                 : <div></div>}

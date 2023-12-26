@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { Navigate, useNavigate } from "react-router-dom";
 
-const API_URL = "http://127.0.0.1:8080/api/v1/signup";
 
 function SignUp() {
     const [email, setEmail] = useState();
@@ -29,7 +28,7 @@ function SignUp() {
         }
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

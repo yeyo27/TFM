@@ -1,5 +1,6 @@
 import '../styles/App.css';
 import Header from './Header';
+import Footer from './Footer';
 import { Outlet } from "react-router-dom";
 
 function App() {
@@ -16,7 +17,7 @@ function App() {
 				</main>
 				
 				<footer className="min-h-[100%] relative border-2 border-white">
-					footer
+					<Footer />
 				</footer>
 			</div>
 		</div>

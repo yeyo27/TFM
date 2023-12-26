@@ -1,16 +1,20 @@
 import { useState } from "react";
 import SubmitButton from "./SubmitButton";
+import LoadingIcon from "./LoadingIcon";
 import { useNavigate } from "react-router-dom";
+import {useAuth} from "../auth/AuthProvider";
 
 function MainUrl() {
-    const [textInput, setTextInput] = useState('');
+    const [textInput, setTextInput] = useState();
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    async function handleButtonClick() {
-        const apiUrl = "http://127.0.0.1:8080/api/v1/url";
+    const auth = useAuth();
 
+    async function handleButtonClick() {
+        setIsLoading(true);
         try {
-            if (textInput === '') {
+            if (!textInput) {
                 throw new Error('No text input');
             }
 
@@ -24,10 +28,11 @@ function MainUrl() {
             }
 
 
-            const response = await fetch(apiUrl, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/url`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${auth.accessToken}`
                 },
                 body: JSON.stringify(data)
             });
@@ -38,10 +43,11 @@ function MainUrl() {
 
             const responseData = await response.json();
             console.log('Response data:', responseData);
-            navigate(`../query/${responseData.collection_id}/${encodeURIComponent(url.href)}`);
+            navigate(`/../query/${responseData.collection_id}/${encodeURIComponent(url.href)}`);
 
         } catch (error) {
             console.error('Error:', error.message);
+            setIsLoading(false);
             // TODO diplay error message
         }
     }
@@ -57,6 +63,7 @@ function MainUrl() {
                 placeholder="https://example.com" />
                 <SubmitButton handleButtonClick={handleButtonClick} />
             </form>
+            {isLoading && <LoadingIcon />}
         </div>
     )
 }

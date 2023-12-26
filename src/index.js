@@ -41,15 +41,33 @@ const router = createBrowserRouter([
       },
       {
         path: "/url",
-        element: <MainUrl/>,
+        element: <ProtectedRoute />,
+        children:[
+          {
+            path: "/url",
+            element: <MainUrl/>,
+          }
+        ]
       },
       {
         path: "/pdf",
-        element: <MainPdf/>,
+        element: <ProtectedRoute />,
+        children:[
+          {
+            path: "/pdf",
+            element: <MainPdf/>,
+          }
+        ]
       },
       {
         path: "/query/:collectionId/:sourceName",
-        element: <MainQuery/>,
+        element: <ProtectedRoute />,
+        children:[
+          {
+            path: "/query/:collectionId/:sourceName",
+            element: <MainQuery/>,
+          }
+        ]
       },
     ],
   },

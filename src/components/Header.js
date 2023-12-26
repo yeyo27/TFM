@@ -9,8 +9,6 @@ import { useAuth } from '../auth/AuthProvider';
 function Header() {
     const auth = useAuth();
 
-    const userEmail = "user@email.com";
-
     return (
     <nav className="w-[100%] h-[100%] flex flex-row justify-between">
         <div className="p-2 w-[70%] h-[100%]">
@@ -25,8 +23,9 @@ function Header() {
 
                 <HeaderElementRight href="/" icon={MenuIcon} text="Menu"/>
 
-                {auth.isAuthenticated ? <HeaderElementRight href="/history" icon={UserIcon} text={userEmail}/> :
-                    <HeaderElementRight href="/login" icon={SignInIcon} text="Sign In"/>}
+                {auth.isAuthenticated ?
+                <HeaderElementRight href="/history" icon={UserIcon} text={auth.userInfo.username}/> :
+                <HeaderElementRight href="/login" icon={SignInIcon} text="Sign In"/>}
             </ul>
         </div>
     </nav>
