@@ -293,14 +293,14 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     refresh_token = create_refresh_token(data={"sub": user.username}, expires_delta=refresh_token_expires)
-    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+    return {"access_token": access_token, "token_type": "Bearer", "refresh_token": refresh_token}
 
 
 @app.post("/api/v1/token/refresh", response_model=Token)
 async def refresh(current_user: Annotated[User, Depends(refresh_current_user)]):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": current_user.username}, expires_delta=access_token_expires)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 
 @app.post("/api/v1/signup")
