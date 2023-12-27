@@ -118,7 +118,7 @@ fake_history_db = {
                 'id': 5,
                 'username': 'alice',
                 'source_name': 'pdf3',
-                'date': '2022-01-01 12:00:00',
+                'date': '2022-01-01 12:00:01',
                 'query': 'What is the weather like?',
                 'responses': [{
                     'id': 1,
@@ -378,6 +378,12 @@ async def signup(user_data: NewUser):
 @app.get("/api/v1/users/me", response_model=User)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
+
+
+@app.delete("/api/v1/users/me")
+async def delete_user(current_user: Annotated[User, Depends(get_current_user)]):
+    del fake_users_db[current_user.username]
+    return {"message": f"User {current_user.username} deleted successfully"}
 
 
 @app.get("/api/v1/history")
