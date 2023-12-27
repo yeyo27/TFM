@@ -42,6 +42,7 @@ function MainUrl() {
             }
 
             const responseData = await response.json();
+            // TODO verify that responseData.total_vectors > 0 before redirecting
             console.log('Response data:', responseData);
             navigate(`/../query/${responseData.collection_id}/${encodeURIComponent(url.href)}`);
 

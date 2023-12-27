@@ -17,6 +17,7 @@ import SignUp from './routes/Signup';
 import MainHistory from './components/MainHistory';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider } from './auth/AuthProvider';
+import { ConfirmationProvider } from './confirmation/ConfirmationProvider';
 
 
 const router = createBrowserRouter([
@@ -88,8 +89,10 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
 	<AuthProvider>
-    	<RouterProvider router={router} />
-    </ AuthProvider>
+    <ConfirmationProvider>
+      <RouterProvider router={router} />
+    </ConfirmationProvider>
+  </ AuthProvider>
   </React.StrictMode>
 );
 

@@ -1,13 +1,35 @@
 import HeaderElementRight from './HeaderElementRight';
 import HeaderElementLeft from './HeaderElementLeft';
+import DropdownMenu from './DropdownMenu';
+import UserDropdownMenu from './UserDropdownMenu';
 import HistoryIcon from '../icons/HistoryIcon.svg';
 import MenuIcon from '../icons/MenuIcon.svg';
 import SignInIcon from '../icons/SignInIcon.svg';
 import UserIcon from '../icons/UserIcon.svg';
 import { useAuth } from '../auth/AuthProvider';
+import { useState } from 'react';
 
 function Header() {
+    const [isDropdownVisible, setDropdownVisible] = useState(false);
+    const [isUserDropdownVisible, setUserDropdownVisible] = useState(false);
+
     const auth = useAuth();
+
+    function handleMouseEnter () {
+        setDropdownVisible(true);
+    }
+
+    function handleMouseLeave () {
+        setDropdownVisible(false);
+    }
+
+    function handleMouseEnterUser () {
+        setUserDropdownVisible(true);
+    }
+
+    function handleMouseLeaveUser () {
+        setUserDropdownVisible(false);
+    }
 
     return (
     <nav className="w-[100%] h-[100%] flex flex-row justify-between">
@@ -21,10 +43,15 @@ function Header() {
             <ul className="flex flex-row justify-between h-[100%] w-[100%] gap-8 p-6">
                 <HeaderElementRight href="/history" icon={HistoryIcon} text="History"/>
 
-                <HeaderElementRight href="/" icon={MenuIcon} text="Menu"/>
-
+                <div className="pt-4" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+                    <HeaderElementRight href="/" icon={MenuIcon} text="Menu"/>
+                    {isDropdownVisible && <DropdownMenu />}
+                </div>
                 {auth.isAuthenticated ?
-                <HeaderElementRight href="/history" icon={UserIcon} text={auth.userInfo.username}/> :
+                <div className="pt-4" onMouseEnter={handleMouseEnterUser} onMouseLeave={handleMouseLeaveUser}>
+                    <HeaderElementRight href="" icon={UserIcon} text={auth.userInfo.username}/>
+                    {isUserDropdownVisible && <UserDropdownMenu />}
+                </div> :
                 <HeaderElementRight href="/login" icon={SignInIcon} text="Sign In"/>}
             </ul>
         </div>

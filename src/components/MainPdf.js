@@ -39,6 +39,7 @@ function MainPdf() {
             }
 
             const responseData = await response.json();
+            // TODO verify that responseData.total_vectors > 0 before redirecting
             console.log('Response data:', responseData);
             const lastDotIndex = selectedFile.name.lastIndexOf(".");
             const fileName = selectedFile.name.slice(0, lastDotIndex);
