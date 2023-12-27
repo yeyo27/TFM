@@ -24,6 +24,18 @@ class VectorDB:
             vectors_config=VectorParams(size=size, distance=Distance.COSINE),
         )
 
+    async def create_collection(self, name: str, size: int = 300) -> None:
+        """
+        Create a collection in the QDrant client. If the collection already exists, it will raise a ValueError
+        :param name: name of the collection
+        :param size: size of the vectors. Depends on the model.
+        :return:
+        """
+        await self.client.create_collection(
+            collection_name=name,
+            vectors_config=VectorParams(size=size, distance=Distance.COSINE),
+        )
+
     async def insert_into(self, name: str, lines_vectors: list[tuple]):
         """
         Insert into a collection
@@ -55,6 +67,9 @@ class VectorDB:
                                         query_vector=query_vector,
                                         with_vectors=False,
                                         limit=limit)
+
+    async def count_collection(self, name: str):
+        return await self.client.count(collection_name=name)
 
 
 async def html_test():
@@ -90,7 +105,7 @@ async def html_test():
 
         logging.debug("Inserting embeddings into 'test' collection...")
         await db.insert_into("test", embeddings)
-        logging.debug(await db.client.count(collection_name="test"))
+        logging.debug(await db.count_collection("test"))
 
         logging.debug("Calculating query embeddings...")
         query = "What are the major browsers today?"
