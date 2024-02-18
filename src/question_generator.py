@@ -60,7 +60,6 @@ class QuestionGeneratorOpenAI:
         for i in range(0, total_fragments, batch_size):
             pos_final = min(i + batch_size, total_fragments)
             prompt = "\n\n".join(fragmented_text[i:pos_final])
-            print(prompt)
             questions = self.completion(prompt)
             responses.append(questions)
         return responses
@@ -79,9 +78,9 @@ def openai_test():
     responses = generator.query_in_batches(blocks[:10])
     print(blocks[:10])
     print(responses[0])
-    print(len(responses[0]))
+    print(len(responses[0].split("\n")))
     print(f"Elapsed time: {time() - start} seconds")
 
 
 if __name__ == "__main__":
-    pass
+    openai_test()

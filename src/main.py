@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from os import getenv
 from pathlib import Path
 from typing import Annotated
+from inspect import signature
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -411,9 +412,10 @@ async def submit_article(article_url: ArticleUrl, current_user: Annotated[User, 
         await database.create_collection(collection_id)
     except ValueError:
         # collection already exists
+        count = await database.count_collection(collection_id)
         return {"url": article_url.href,
                 "collection_id": collection_id,
-                "total_vectors": await database.count_collection(collection_id)}
+                "total_vectors": count["count"]}
 
     readable_html = get_readable_html(article_url.href)
 

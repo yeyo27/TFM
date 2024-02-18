@@ -12,7 +12,7 @@ class VectorDB:
     def __init__(self):
         self.client = AsyncQdrantClient(":memory:")
 
-    async def create_or_replace_collection(self, name: str, size: int = 300) -> None:
+    async def create_or_replace_collection(self, name: str, size: int = 384) -> None:
         """
         Create or replace a collection in the QDrant client
         :param name: name of the collection
@@ -24,7 +24,7 @@ class VectorDB:
             vectors_config=VectorParams(size=size, distance=Distance.COSINE),
         )
 
-    async def create_collection(self, name: str, size: int = 300) -> None:
+    async def create_collection(self, name: str, size: int = 384) -> None:
         """
         Create a collection in the QDrant client. If the collection already exists, it will raise a ValueError
         :param name: name of the collection
