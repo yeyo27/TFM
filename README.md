@@ -14,7 +14,7 @@ Install dependencies:
 ```commandline
 $ python3 -m pip install requirements_dev.txt
 ```
-Anf finally run:
+And finally run:
 ```commandline
 $ python3 -m src/main.py
 ```

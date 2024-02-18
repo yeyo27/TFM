@@ -6,7 +6,7 @@ from src.text_scraping import HtmlCleaner, PyMuPdfCleaner
 
 
 class EmbeddingsCalculator:
-    def __init__(self, model_name="average_word_embeddings_komninos"):
+    def __init__(self, model_name="paraphrase-multilingual-MiniLM-L12-v2"):
         self.model = SentenceTransformer(model_name)
 
     def calculate(self, text_unit: str | list[str]) -> list:
